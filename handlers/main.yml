@@ -1,0 +1,13 @@
+---
+- name: 'restart_sshd'
+  service:
+    name: 'sshd'
+    state: restarted
+    enabled: yes
+
+- name: 'restart_vmtools'
+  systemd:
+    name: 'vmtoolsd'
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

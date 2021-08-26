@@ -1,0 +1,127 @@
+# Playbook for hardening CSOPS test servers - a/k/a level 3 tasks
+# Call this from the CIS job in prod infra Rundeck
+---
+# - name: 'Include the tasks for standalone container test setup'
+#  include_tasks: 'bloat.yml'
+#  tags:
+#    - level3
+#    - rhel7
+#    - rhel8
+#    - csops
+
+- name: 'Install some RHEL packages for container tests'
+  yum:
+    name: "{{ lookup('vars', 'pkgs_to_install') }}"
+    enablerepo: "{{ lookup('vars', 'enablerepo_'+ ansible_os_family  + ansible_distribution_major_version) }}"
+    state: present
+    releasever: "{{ ansible_distribution_version }}"
+  when:
+    - ansible_virtualization_type == 'docker'
+  tags:
+    - level3
+    - rhel7
+    - csops
+
+- name: '1.1.3 and 1.1.4: Ensure nodev and nosuid options are set on /tmp partition'
+  mount: >
+    name='/tmp'
+    src='none'
+    state=mounted
+    fstype='tmpfs'
+    opts='nodev,nosuid'
+  tags:
+    - 1_1_3
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '1.1.14: Ensure nodev option is set on /home partition'
+  mount: >
+    name='/home'
+    src='/dev/mapper/VolGroup00-lvol02'
+    state=mounted
+    fstype='xfs'
+    opts='defaults,nodev'
+  tags:
+    - 1_1_14
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '1.1.21: Ensure sticky bit is set on all world-writable directories'
+  shell: |
+    set -o pipefail
+    df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type d -perm -0002 2>/dev/null | xargs chmod a+t
+  changed_when: no
+  tags:
+    - 1_1_14
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '1.1.22: Disable Automounting'
+  service:
+    name: autofs
+    enabled: no
+    state: stopped
+  ignore_errors: true
+  tags:
+    - 1_1_22
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '1.5.1: Ensure core dumps are restricted'
+  lineinfile:
+    dest: '/etc/security/limits.conf'
+    insertafter: '#*               soft    core            0'
+    line: '*               hard    core            0'
+    state: present
+  tags:
+    - 1_5_1
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '1.5.1 (2): Ensure core dumps are restricted'
+  copy:
+    content: '* hard core 0'
+    dest: '/etc/security/limits.d/CIS.conf'
+    force: no
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  tags:
+    - 1_5_1
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '2.3.4: Ensure telnet client is not installed'
+  package:
+    name: telnet
+    state: absent
+  tags:
+    - 2_3_4
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '3.1.1: Ensure IP forwarding is disabled'
+  replace:
+    path: '/etc/sysctl.conf'
+    regexp: '^net.ipv4.ip_forward\s*=\s*1\s*$'
+    replace: 'net.ipv4.ip_forward = 0'
+  tags:
+    - 3_1_1
+    - level3
+    - rhel7
+    - rhel8
+    - csops

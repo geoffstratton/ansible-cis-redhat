@@ -1,0 +1,167 @@
+# RHEL 7/8 CIS section 6 tasks
+---
+- name: '6.1.7: Ensure permissions on /etc/shadow are configured'
+  file:
+    path: "{{ item }}"
+    owner: 'root'
+    group: 'root'
+    mode: '0000'
+  with_items:
+    - /etc/shadow
+    - /etc/shadow-
+  tags:
+    - 6_1_7
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.1.10: Ensure no world-writable files exist'
+  shell: |
+    set -o pipefail
+    df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002
+  changed_when: no
+  register: cis_world_writable
+  tags:
+    - 6_1_10
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.1.10 (2): Print the world-writable files'
+  debug: var=cis_world_writable.stdout_lines
+  when:
+    - cis_world_writable is defined
+    - cis_world_writable.stdout_lines|length > 0
+  tags:
+    - 6_1_10
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.1.10 (3): Fix the world-writable files'
+  file:
+    path: "{{ item }}"
+    mode: '0755'
+  with_items:
+    - "{{ cis_world_writable.stdout_lines }}"
+  when:
+    - cis_world_writable is defined
+    - cis_world_writable.stdout_lines|length > 0
+  tags:
+    - 6_1_10
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+# - name: '6.1.11: Ensure no unowned files or directories exist' - won't do
+
+# - name: '6.1.12: Ensure no ungrouped files or directories exist' - won't do
+
+- name: '6.2.1: Ensure password fields are not empty'
+  shell: |
+    set -o pipefail
+    cat /etc/shadow | awk -F: '(length($2) == 0 ) { print $1 }'
+  changed_when: false
+  register: empty_passwords
+  tags:
+    - 6_2_1
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - all
+
+- name: 'List any accounts without passwords'
+  debug:
+    msg: "{{ empty_passwords.stdout_lines }}"
+  when:
+    - empty_passwords.stdout_lines is defined
+    - empty_passwords.stdout_lines|length > 0
+  tags:
+    - 6_2_1
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - all
+
+- name: '6.2.8: Ensure the home directories permissions are 750 or more restrictive'
+  shell: |
+    set pipefail -o
+    ls -d /home/*
+  register: cis_home_dirs
+  ignore_errors: yes
+  changed_when: no
+  tags:
+    - 6_2_8
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.2.8 (2): Print the home directories'
+  debug: var=cis_home_dirs.stdout_lines
+  when:
+    - cis_home_dirs is defined
+    - cis_home_dirs.stdout_lines|length > 0
+  tags:
+    - 6_2_8
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.2.8 (3): Ensure the home directories permissions are 750 or more restrictive'
+  file:
+    path: "{{ item }}"
+    mode: '0750'
+  with_items:
+    - "{{ cis_home_dirs.stdout_lines }}"
+  when:
+    - cis_home_dirs is defined
+    - cis_home_dirs.stdout_lines|length > 0
+  tags:
+    - 6_2_8
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.2.8 (4): Ensure the home directories permissions are 750 or more restrictive'
+  stat:
+    path: '/opt/metron'
+  register: cis_metron_exists
+  tags:
+    - 6_2_8
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '6.2.8 (5): Ensure the home directories permissions are 750 or more restrictive'
+  file:
+    path: '/opt/metron'
+    mode: '0750'
+  when:
+    - cis_metron_exists.stat.isdir is defined
+  tags:
+    - 6_2_8
+    - section6
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+# - name: '6.2.9: Ensure users own their home directories' - won't do, false positive

@@ -1,0 +1,154 @@
+# RHEL 7/8 section 4 tasks
+---
+- name: '4.2.4: Find the logfiles in /var/log'
+  command:
+    cmd: 'find /var/log -type f -not -path "/var/log/audit/*"'
+  changed_when: no
+  register: cis_find_logfiles
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (2): Fix the permissions on all logfiles'
+  file:
+    path: "{{ item }}"
+    src: "{{ item }}"
+    mode: '0640'
+  with_items:
+    - "{{ cis_find_logfiles.stdout_lines }}"
+  when:
+    - cis_find_logfiles is defined
+    - cis_find_logfiles|length > 0
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (3): Fix logrotate.conf to set all permissions to 0640'
+  replace:
+    path: '/etc/logrotate.conf'
+    regexp: "{{ item }}"
+    replace: 'create 0640'
+  changed_when: no
+  with_items:
+    - '^create$'
+    - 'create 0664'
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+  when:
+    - cis_find_logfiles is defined
+
+- name: '4.2.4 (3.5): Fix /usr/lib64/sa/sa1 and sa2 to set new sar logs to 0640'
+  stat:
+    path: '/usr/lib64/sa/sa1'
+  register: cis_sa
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (4): Fix /usr/lib64/sa/sa1 and sa2 to set new sar logs to 0640'
+  replace:
+    path: "/usr/lib64/sa/{{ item }}"
+    regexp: 'umask 0022'
+    replace: 'umask 0026'
+  with_items:
+    - 'sa1'
+    - 'sa2'
+  changed_when: no
+  when:
+    - cis_sa.stat.exists
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (5): Check for atop logrotate file'
+  stat:
+    path: "{{ cis_logrotate_atop }}"
+  register: cis_atop_exists
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (6): Fix /usr/share/atop log rotation'
+  lineinfile:
+    path: "{{ cis_logrotate_atop }}"
+    insertafter: '\/usr\/bin\/find.*'
+    line: '      chmod 0640 /var/log/atop/*;'
+    state: present
+  when:
+    - cis_atop_exists.stat.exists
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (7): Check for vmtools'
+  stat:
+    path: '/usr/lib/systemd/system/vmtoolsd.service'
+  register: cis_vmtoolsd
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (7.1): Fix vmtools permissions'
+  lineinfile:
+    path: '/usr/lib/systemd/system/vmtoolsd.service'
+    insertafter: 'TimeoutStopSec=5'
+    line: 'UMask=0026'
+    state: present
+  notify: restart_vmtools
+  when:
+    - cis_vmtoolsd.stat.exists
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '4.2.4 (8): Fix ntpd permissions'
+  template:
+    src: 'ntp_logs.j2'
+    dest: '/etc/cron.d/ntp_logs'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  tags:
+    - 4_2_4
+    - section4
+    - level1
+    - rhel7
+    - rhel8
+    - csops

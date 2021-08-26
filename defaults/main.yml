@@ -1,0 +1,110 @@
+---
+ansible_environment: "lab"
+
+cis_ansible_facts_dir: '/etc/ansible/facts.d'
+cis_level1_run: 'complete'
+
+# 1.4.1: Ensure permissions on bootloader config are configured
+cis_bootloader_cfg: '/boot/grub2/grub.cfg'
+
+cis_initial_sshd_config:
+  Port: '22'
+  Protocol: '2'
+  # AddressFamily: 'any'
+  # ListenAddress: '0.0.0.0'
+  # HostKey''v1: '/etc/ssh/ssh_host_key'
+  # HostKey''rsa: '/etc/ssh/ssh_host_rsa_key'
+  # HostKey''rsa: '/etc/ssh/ssh_host_dsa_key'
+  # KeyRegenerationInterval: '1h'
+  # ServerKeyBits: '768'
+  SyslogFacility: 'AUTHPRIV'
+  LogLevel: 'INFO'
+  LoginGraceTime: 60
+  PermitRootLogin: 'without-password'
+  # StrictModes: 'yes'
+  MaxAuthTries: 4
+  # RSAAuthentication: 'yes'
+  # PubkeyAuthentication: 'yes'
+  # AuthorizedKeysFile: '.ssh/authorized_keys'
+  # RhostsRSAAuthentication: 'no'
+  HostbasedAuthentication: 'no'
+  IgnoreRhosts: 'yes'
+  PasswordAuthentication: 'yes'
+  PermitEmptyPasswords: 'no'
+  # PasswordAuthentication: 'yes'
+  ChallengeResponseAuthentication: 'no'
+  # KerberosAuthentication: 'no'
+  # KerberosOrLocalPasswd: 'yes'
+  # KerberosTicketCleanup: 'yes'
+  # KerberosGetAFSToken: 'no'
+  GSSAPIAuthentication: 'yes'
+  GSSAPICleanupCredentials: 'yes'
+  UsePAM: 'yes'
+  # AllowTcpForwarding: 'yes'
+  # GatewayPorts: 'no'
+  X11Forwarding: 'no'
+  X11DisplayOffset: '10'
+  # X11UseLocalhost: 'yes'
+  # PrintMotd: 'yes'
+  # PrintLastLog: 'yes'
+  # TCPKeepAlive: 'yes'
+  # UseLogin: 'no'
+  # UsePrivilegeSeparation: 'yes'
+  PermitUserEnvironment: 'no'
+  # Compression: 'delayed'
+  ClientAliveInterval: '300'
+  ClientAliveCountMax: '3'
+  # ShowPatchLevel: 'no'
+  # UseDNS: 'yes'
+  # PidFile: '/var/run/sshd.pid'
+  # MaxStartups: '10'
+  # PermitTunnel: 'no'
+  # ChrootDirectory: 'none'
+  Banner: '/etc/issue'
+  Subsystem:
+    'sftp /usr/libexec/openssh/sftp-server -f LOCAL6 -l INFO'
+  #
+  Ciphers: 'aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc,aes192-cbc,aes256-cbc'
+  MACs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com'
+  MaxSessions: '10'
+  AllowAgentForwarding: 'yes'
+  AllowTcpForwarding: 'yes'
+  AllowUsers: '*'
+
+# 4.2.4: Configure logfiles
+logrotate_conf_dir: '/etc/logrotate.d'
+logrotate_conf_file: '/etc/logrotate.conf'
+logrotate_freq: 'weekly'
+logrotate_backlogs: 4
+logrotate_new_files: 'create'
+logrotate_suffix: 'dateext'
+logrotate_compress: false
+
+cis_logrotate_atop: '/etc/logrotate.d/atop'
+
+logrotate_atop_dir: '/var/log/atop/atop_*'
+logrotate_atop_freq: 'daily'
+logrotate_atop_status: 'missingok'
+logrotate_atop_perms: 'nocreate'
+logrotate_atop_dateext: 'nodateext'
+logrotate_atop_maxage: 5
+logrotate_atop_backlog: 1
+
+logrotate_wtmp_dir: '/var/log/wtmp'
+logrotate_wtmp_freq: 'monthly'
+logrotate_wtmp_perms: 'create 0664 root utmp'
+logrotate_wtmp_minsize: '1M'
+logrotate_wtmp_backlog: 1
+
+logrotate_btmp_dir: '/var/log/btmp'
+logrotate_btmp_status: 'missingok'
+logrotate_btmp_freq: 'monthly'
+logrotate_btmp_perms: 'create 0600 root utmp'
+logrotate_btmp_backlog: 1
+
+# 5.3.1: pwquality.conf - we use the defaults here
+cis_pwquality_minlen: "9"   # Minimum number of characters required for passwords
+cis_pwquality_dcredit: "1"  # At least one digit must be provided
+cis_pwquality_ucredit: "1"  # At least one uppercase character must be provided
+cis_pwquality_ocredit: "1"  # At least one special character must be provided
+cis_pwquality_lcredit: "1"  # At least one lowercase character must be provided

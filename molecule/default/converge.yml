@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Include CIS
+      include_role:
+        name: ansible-cis-redhat

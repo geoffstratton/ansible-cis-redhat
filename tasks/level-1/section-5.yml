@@ -1,0 +1,171 @@
+# RHEL 7/8 CIS section 5 tasks
+---
+# cron.d permissions are 0755 on servers
+- name: '5.1.7: Ensure permissions on /etc/cron.d are configured'
+  file:
+    dest: '/etc/cron.d'
+    state: directory
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+  tags:
+    - 5_1_7
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '5.1.8: Ensure at/cron is restricted to authorized users'
+  file:
+    dest: "/etc/{{ item }}"
+    state: absent
+  with_items:
+    - at.deny
+    - cron.deny
+  tags:
+    - 5_1_8
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+# sshd_config changes: also need to update default role so changes remain on new servers
+# See role default -> sshd_config.yml
+
+# - name: '5.2.1: Ensure permissions on /etc/ssh/sshd_config are configured'
+
+# - name: '5.2.11: Ensure only approved MAC algorithms are used'
+
+# - name: '5.2.14: Ensure SSH access is limited'
+
+# - name: '5.2.3: Ensure SSH LogLevel is set to INFO'
+
+# - name: '5.2.8: Ensure SSH root login is disabled'
+# Won't do; exception added to Rapid7 scan rules
+
+- name: 'Set all the SSH config options'
+  template:
+    src: 'cis_initial_sshd_config.j2'
+    dest: '/etc/ssh/sshd_config'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+  notify: restart_sshd
+  when:
+    - ansible_distribution_major_version >= '7'
+  tags:
+    - 5_2_1
+    - 5_2_11
+    - 5_2_14
+    - 5_2_3
+    - 5_2_8
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '5.4.1.4: Ensure inactive password lock is 30 days or less'
+  lineinfile:
+    dest: '/etc/default/useradd'
+    regexp: '^INACTIVE'
+    line: 'INACTIVE=30'
+    state: present
+  tags:
+    - 5_4_1_4
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '5.4.1.4 (2): Get a list of user accounts'
+  shell: |
+    set -o pipefail
+    egrep ^[^@:]+:[^\\!*] /etc/shadow | cut -d: -f1
+  register: cis_user_accounts
+  ignore_errors: yes
+  changed_when: no
+  tags:
+    - 5_4_1_4
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: 'Print the user accounts'
+  debug: var=cis_user_accounts
+  when: cis_user_accounts is defined
+
+- name: '5.4.1.4 (3): Set inactive password lock for all user accounts'
+  shell: |
+    set pipefail -o
+    chage --inactive 30 "{{ item }}"
+  changed_when: no
+  with_items:
+    - "{{ cis_user_accounts.stdout_lines }}"
+  when:
+    - cis_user_accounts is defined
+    - cis_user_accounts|length > 0
+    - cis_user_accounts['stdout'] != 'root'
+  tags:
+    - 5_4_1_4
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '5.4.4: Ensure default user umask is 027 or more restrictive'
+  replace:
+    path: "{{ item }}"
+    regexp: 'umask 0.*'
+    replace: 'umask 027'
+  with_items:
+    - /etc/bashrc
+    - /etc/profile
+  tags:
+    - 5_4_4
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+- name: '5.4.4 (2): Add umask to /etc/profile.d'
+  copy:
+    content: 'umask 027'
+    dest: '/etc/profile.d/umask.sh'
+    force: no
+    owner: 'root'
+    group: 'root'
+    mode: '0640'
+  tags:
+    - 5_4_4
+    - section5
+    - level1
+    - rhel7
+    - rhel8
+    - csops
+
+# pam.d change: also need to update default role so changes remain on new servers
+- name: '5.6: Ensure access to the su command is restricted'
+  pamd:
+    name: su
+    type: auth
+    control: sufficient
+    module_path: pam_rootok.so
+    new_type: auth
+    new_control: required
+    new_module_path: pam_wheel.so
+    module_arguments: 'use_uid'
+    state: after
+  tags:
+    - 5_6
+    - level3
+    - rhel7
+    - rhel8
+    - csops

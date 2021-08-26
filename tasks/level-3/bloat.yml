@@ -1,0 +1,80 @@
+# Tasks to set up container testing only. Not run against VMs.
+---
+- name: 'Set up open-vm-tools for the container tests -- repo fact'
+  set_fact:
+    vmwaretools_enablerepo: "{{ lookup('vars','vmwaretools_enablerepo_' + ansible_os_family + ansible_distribution_major_version) }}"
+  when:
+    - ansible_virtualization_type == 'docker'
+  tags:
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: 'Set up open-vm-tools for the container tests -- packages fact'
+  set_fact:
+    vmwaretools_pkgs: "{{ lookup('vars','vmwaretools_pkgs_' + ansible_os_family + ansible_distribution_major_version) }}"
+  when:
+    - ansible_virtualization_type == 'docker'
+  tags:
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: 'Install some RHEL packages for container tests'
+  yum:
+    name: "{{ lookup('vars', 'pkgs_to_install') }}"
+    enablerepo: "{{ lookup('vars', 'enablerepo_'+ ansible_os_family  + ansible_distribution_major_version) }}"
+    state: present
+    releasever: "{{ ansible_distribution_version }}"
+  when:
+    - ansible_virtualization_type == 'docker'
+  tags:
+    - level3
+    - rhel7
+    - csops
+
+- name: 'Set up logrotate.conf file for container tests'
+  template:
+    src: logrotate_conf.j2
+    dest: "{{ logrotate_conf_file }}"
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  changed_when: no
+  when:
+    - ansible_virtualization_type == 'docker'
+  tags:
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: 'Set up ntpd for the container tests -- the leapseconds file'
+  copy:
+    src: ntp.leapseconds
+    dest: "{{ ntp_conf.leapfile }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  when:
+    ansible_virtualization_type == 'docker'
+  tags:
+    - level3
+    - rhel7
+    - rhel8
+    - csops
+
+- name: 'Set up ntpd for the container tests -- ntp.conf'
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+  notify: start_enable_ntp
+  when:
+    - ansible_virtualization_type == "docker"
+    - ansible_distribution_major_version != '8'
+  tags:
+    - level3
+    - rhel7
+    - csops

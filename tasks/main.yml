@@ -1,0 +1,55 @@
+# CIS scan and fixes for RHEL 7/8 servers
+---
+- name: 'Run a CIS benchmark scan'
+  include_tasks: 'run-cis-scan.yml'
+  tags:
+    - run_cis_scan
+
+- name: 'Apply Level 1, Section 1 CIS benchmark fixes'
+  include_tasks: 'level-1/section-1.yml'
+  tags:
+    - level1
+    - section1
+    - csops
+
+- name: 'Apply Level 1, Section 2 CIS benchmark fixes'
+  include_tasks: 'level-1/section-2.yml'
+  tags:
+    - level1
+    - section2
+    - csops
+
+- name: 'Apply Level 1, Section 3 CIS benchmark fixes'
+  include_tasks: 'level-1/section-3.yml'
+  tags:
+    - level1
+    - section3
+    - csops
+
+- name: 'Apply Level 1, Section 4 CIS benchmark fixes'
+  include_tasks: 'level-1/section-4.yml'
+  tags:
+    - level1
+    - section4
+    - csops
+
+- name: 'Apply Level 1, Section 5 CIS benchmark fixes'
+  include_tasks: 'level-1/section-5.yml'
+  tags:
+    - level1
+    - section5
+    - csops
+
+- name: 'Apply Level 1, Section 6 CIS benchmark fixes'
+  include_tasks: 'level-1/section-6.yml'
+  tags:
+    - level1
+    - section6
+    - csops
+
+- name: 'Apply the CSOPS Level 3 rules'
+  include_tasks: 'level-3/main.yml'
+  tags:
+    - level3
+    - csops
+    - never

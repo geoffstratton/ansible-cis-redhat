@@ -1,0 +1,38 @@
+# 
+# {{ ansible_managed }}
+#
+# see "man logrotate" for details
+# rotate log files {{ logrotate_freq }}
+{{ logrotate_freq }}
+
+# keep {{ logrotate_backlogs }} weeks worth of backlogs
+rotate {{ logrotate_backlogs }}
+
+# {{ logrotate_new_files }} new (empty) log files after rotating old ones
+{{ logrotate_new_files }}
+
+# use {{ logrotate_suffix }} as a suffix of the rotated file
+{{ logrotate_suffix }}
+
+# uncomment this if you want your log files compressed
+{% if logrotate_compress == false %}#{% endif %}compress
+
+# RPM packages drop log rotation information into this directory
+include {{ logrotate_conf_dir }}
+
+# no packages own wtmp and btmp -- we'll rotate them here
+{{ logrotate_wtmp_dir }} {
+    {{ logrotate_wtmp_freq }}
+    {{ logrotate_wtmp_perms }}
+        minsize {{ logrotate_wtmp_minsize }}
+    rotate {{ logrotate_wtmp_backlog }}
+}
+
+{{ logrotate_btmp_dir }} {
+    {{ logrotate_btmp_status }}
+    {{ logrotate_btmp_freq }}
+    {{ logrotate_btmp_perms }}
+    rotate {{ logrotate_btmp_backlog }}
+}
+
+# system-specific logs may be also be configured here.

@@ -1,0 +1,10 @@
+# RHEL 7/8 CIS section 3 tasks
+# Won't do - few running iptables/firewalld installs
+---
+# - name: '3.4.3: Ensure hosts.deny is configured'
+
+# - name: '3.6.2: Ensure default deny firewall policy'
+
+# - name: '3.6.3: Ensure loopback traffic is configured'
+
+# - name: '3.6.5: Ensure firewall rules exist for all open ports'

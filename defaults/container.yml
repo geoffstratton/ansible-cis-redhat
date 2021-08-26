@@ -1,0 +1,39 @@
+---
+pkgs_to_install: ['openssh-server', 'open-vm-tools', 'ntp', 'autofs', 'sysstat', 'atop']
+
+enablerepo_RedHat8:
+  - ansible-2.8-for-rhel-8-x86_64-rpms
+  - rhel-8-for-x86_64-appstream-rpms
+  - rhel-8-for-x86_64-baseos-rpms
+  - rhel-8-for-x86_64-baseos-source-rpms
+  - Default_Organization_EPEL_8_x86_64
+enablerepo_RedHat7:
+  - rhel-7-server-rpms
+  - rhel-7-server-extras-rpms
+  - rhel-7-server-rhn-tools-rpms
+  - rhel-7-server-rh-common-rpms
+  - rhel-7-server-supplementary-rpms
+  - rhel-7-server-optional-rpms
+  - Default_Organization_EPEL_7_x86_64
+
+vmwaretools_pkgs: [ ]
+vmwaretools_pkgs_RedHat7:
+  - open-vm-tools
+vmwaretools_pkgs_RedHat8: [ ]
+vmwaretools_enablerepo_RedHat7: [ ]
+vmwaretools_enablerepo_RedHat8: [ ]
+
+ntp:
+  servers: ['x.x.x.2', 'x.x.x.3']
+ntp_conf:
+  service: 'ntpd'
+  driftfile: '/var/lib/ntp/drift'
+  statsdir: '/var/log/ntpstats/'
+  leapfile: '/etc/ntp.leapseconds'
+
+ntp_tinker:
+  panic: 0
+  allan: 1500
+  dispersion: 15
+  step: 0.128
+  stepout: 900
